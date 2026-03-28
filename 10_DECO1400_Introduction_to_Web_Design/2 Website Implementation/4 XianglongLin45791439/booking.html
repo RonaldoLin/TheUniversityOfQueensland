@@ -1,0 +1,119 @@
+<!--HTML-->
+<!doctype html>
+<!--Language-->
+<html lang="en">
+<!--Setting-->
+<head>
+    <!--Character-->
+    <meta charset="utf-8">
+    <!--Meta-->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--Page Title-->
+    <title>Ice World In Iceland | Booking Page</title>
+    <!--CSS-->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<!--Body-->
+<body>
+<div class="container">
+    <header>
+        <!--Logo-->
+        <figure>
+            <img src="images/logo.png" alt="Resort Logo" class="logo">
+        </figure>
+        <!--Navigation Bar-->
+        <nav id="nav">
+            <ul>
+                <!--Home-->
+                <li id="home">
+                    <!--Link-->
+                    <a href="index.html">Home</a>
+                </li>
+                <!--Event-->
+                <li id="event">
+                    <!--Link-->
+                    <a href="event.html">Event</a>
+                </li>
+                <!--Service-->
+                <li id="service">
+                    <!--Link-->
+                    <a href="service.html">Service</a>
+                </li>
+                <!--Hotel-->
+                <li id="hotel">
+                    <!--Link-->
+                    <a href="hotel.html">Hotel</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+    <!--Clear Line-->
+    <div class="clear"></div>
+    <!--Resort Name-->
+    <div>
+        <h1 id="title">Ice World In Iceland</h1>
+    </div>
+    <!--Booking Form-->
+    <section id="booking">
+        <h2>Book Your Stay</h2>
+        <form id="booking-form">
+            <!--Name-->
+            <label id="name1" for="name">Name:</label>
+            <br>
+            <br>
+            <input type="text" id="name2" name="name" required>
+            <br>
+            <br>
+            <!--Email-->
+            <label id="email1" for="email">Email:</label>
+            <br>
+            <br>
+            <input type="email" id="email2" name="email" required>
+            <br>
+            <br>
+            <!--Arrival Date-->
+            <label id="arrival-date1" for="arrival-date">Arrival Date:</label>
+            <br>
+            <br>
+            <input type="date" id="arrival-date2" name="arrival-date" min="1990" required>
+            <br>
+            <br>
+            <!--Nights-->
+            <label id="nights1" for="nights">Nights:</label>
+            <br>
+            <br>
+            <input type="number" id="nights2" name="nights" min="1">
+            <br>
+            <br>
+            <!--Submit-->
+            <button type="submit">Book Now</button>
+        </form>
+        <div id="booking-modal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Booking Confirmation</h2>
+                <div id="booking-details"></div>
+            </div>
+        </div>
+    </section>
+    <!--Clear Line-->
+    <div class="clear"></div>
+    <!--Footer-->
+    <footer>
+        <a href="more.html">
+            <img src="images/footer.png" alt="Footer">
+        </a>
+    </footer>
+    <!--Live Chat Support-->
+    <img src="images/robot.png" alt="Chat Robot" id="chatIcon">
+    <div id="chatBox" style="display: none;">
+        <div class="chatBubble bot">Hello! How can I assist you today?</div>
+        <input id="chatInput" type="text" placeholder="Type your message here...">
+    </div>
+</div>
+</body>
+
+<!--JavaScript-->
+<script src="js/script.js"></script>
+
+</html>
