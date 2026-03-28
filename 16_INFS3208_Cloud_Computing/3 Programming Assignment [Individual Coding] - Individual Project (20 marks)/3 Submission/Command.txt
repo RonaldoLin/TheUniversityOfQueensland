@@ -1,0 +1,281 @@
+# Command Content
+
+# Update package index
+sudo apt -get update 
+
+# Install Docker
+sudo apt-get install docker.io
+
+# Install Docker Compose
+sudo curl -L "https://github.com/docker/compose/releases/download/1.26.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+# Create a symbolic link
+sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+
+# Confirm
+Y
+
+# Create a directory named "ip"
+mkdir ip
+
+# Navigate into the "ip" directory
+cd ip
+
+# Create a custom Docker bridge network named "my_custom_network"
+sudo docker network create --driver=bridge my_custom_network
+
+# Open the "docker-compose.yml" file for editing using the Vim text editor
+vim docker-compose.yml
+
+# Once the file is open, press "i" to enter insert mode in Vim and start editing the file.
+i
+
+# Docker Compose Content
+
+# Define Docker Version
+version: "3.3"
+
+# Define Docker volumes
+volumes:
+    shared-workspace:
+    hadoop_namenode:
+    hadoop_datanode1:
+    hadoop_datanode2:
+    hadoop_datanode3:
+    hadoop_historyserver:
+
+# Define Docker network
+networks:
+    my_custom_network:
+      external: true
+
+# Define Docker services
+services:
+
+  # Spark Master service
+  spark-master:
+    image: uqteaching/cloudcomputing:spark-master-v1
+    container_name: spark-master
+    networks:
+        - my_custom_network
+    ports:
+        - "8080:8080"
+        - "7077:7077"
+    environment:
+        - INIT_DAEMON_STEP=setup_spark
+        - "PYSPARK_PYTHON=/usr/bin/python3"            
+        - "PYSPARK_DRIVER_PYTHON=/usr/bin/python3"            
+  
+  # Spark Worker 1 service
+  spark-worker-1:
+    image: uqteaching/cloudcomputing:spark-worker-v1
+    container_name: spark-worker-1
+    depends_on:
+        - spark-master
+    networks:
+        - my_custom_network
+    ports:
+        - "8081:8081"
+    environment:
+        - "SPARK_MASTER=spark://spark-master:7077"            
+        - "PYSPARK_PYTHON=/usr/bin/python3"            
+        - "PYSPARK_DRIVER_PYTHON=/usr/bin/python3"            
+
+  # Spark Worker 2 service
+  spark-worker-2:
+    image: uqteaching/cloudcomputing:spark-worker-v1
+    container_name: spark-worker-2
+    depends_on:
+        - spark-master
+    networks:
+        - my_custom_network
+    ports:
+        - "8082:8082"
+    environment:
+        - "SPARK_MASTER=spark://spark-master:7077"            
+        - "PYSPARK_PYTHON=/usr/bin/python3"            
+        - "PYSPARK_DRIVER_PYTHON=/usr/bin/python3"            
+  
+  # Jupyter Notebook service
+  jupyter-notebook:
+    container_name: jupyternb
+    image: jupyter/all-spark-notebook:42f4c82a07ff
+    depends_on:
+        - spark-master
+    expose:
+        - "8888"
+    networks:
+        - my_custom_network
+    ports:
+        - "8888:8888"
+    volumes:
+        - ./nbs:/home/jovyan/work/nbs
+        - ./events:/tmp/spark-events
+    environment:
+        - "PYSPARK_PYTHON=/usr/bin/python3"            
+        - "PYSPARK_DRIVER_PYTHON=/usr/bin/python3"            
+    command: "start-notebook.sh \
+          --ip=0.0.0.0 \
+          --allow-root \
+          --notebook-dir=/home/jovyan/work/nbs \
+          --NotebookApp.token=''"
+
+  # Hadoop NameNode service
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    restart: always
+    networks:
+        - my_custom_network
+    ports:
+      - 8083:9870
+      - 9000:9000
+    volumes:
+      - hadoop_namenode:/hadoop/dfs/name
+    environment:
+      - CLUSTER_NAME=test
+    env_file:
+      - ./Hadoop-docker/hadoop.env
+
+  # Hadoop ResourceManager service
+  resourcemanager:
+    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
+    container_name: resourcemanager
+    restart: always
+    depends_on:
+      - namenode
+      - datanode1
+      - datanode2
+      - datanode3
+    networks:
+        - my_custom_network
+    ports:
+      - 8089:8088
+    env_file:
+      - ./Hadoop-docker/hadoop.env
+
+  # Hadoop HistoryServer service
+  historyserver:
+    image: bde2020/hadoop-historyserver:2.0.0-hadoop3.2.1-java8
+    container_name: historyserver
+    restart: always
+    depends_on:
+      - namenode
+      - datanode1
+      - datanode2
+      - datanode3
+    networks:
+        - my_custom_network
+    volumes:
+      - hadoop_historyserver:/hadoop/yarn/timeline
+    env_file:
+      - ./Hadoop-docker/hadoop.env
+
+  # Hadoop NodeManager 1 service
+  nodemanager1:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    container_name: nodemanager
+    restart: always
+    depends_on:
+      - namenode
+      - datanode1
+      - datanode2
+      - datanode3
+    networks:
+        - my_custom_network
+    env_file:
+      - ./Hadoop-docker/hadoop.env
+
+  # Hadoop DataNode 1 service
+  datanode1:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode1
+    restart: always
+    depends_on:
+      - namenode
+    volumes:
+      - hadoop_datanode1:/hadoop/dfs/data
+    networks:
+        - my_custom_network
+    env_file:
+      - ./Hadoop-docker/hadoop.env
+
+  # Hadoop DataNode 2 service
+  datanode2:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode2
+    restart: always
+    depends_on:
+      - namenode
+    volumes:
+      - hadoop_datanode2:/hadoop/dfs/data
+    networks:
+        - my_custom_network
+    env_file:
+      - ./Hadoop-docker/hadoop.env
+
+  # Hadoop DataNode 3 service
+  datanode3:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode3
+    restart: always
+    depends_on:
+      - namenode
+    volumes:
+      - hadoop_datanode3:/hadoop/dfs/data
+    networks:
+        - my_custom_network
+    env_file:
+      - ./Hadoop-docker/hadoop.env
+
+# Save and exit the editor
+:wq
+
+# Create a directory and navigate to it
+mkdir -p $HOME/ip/Hadoop-docker && cd $HOME/ip/Hadoop-docker
+
+# Download the 'hadoop.env' file
+wget https://raw.githubusercontent.com/csenw/cloudcomputingcourse/master/prac7/hadoop.env
+
+# Go back to the parent directory
+cd ..
+
+# Start Docker Compose containers
+sudo docker-compose up -d
+
+# Check running Docker containers
+sudo docker ps
+
+# Navigate to the home directory
+cd
+
+# Copy files into the Docker container
+sudo docker cp MHDD.csv d601ff43a346:/tmp/
+sudo docker cp LE.csv d601ff43a346:/tmp/
+sudo docker cp WH.csv d601ff43a346:/tmp/
+
+# Access the Docker container interactively
+sudo docker exec -it  d601ff43a346 bash
+
+# Create a directory '/data' in HDFS
+hdfs dfs -mkdir /data
+
+# Upload files to HDFS
+hdfs dfs -put /tmp/MHDD.csv /data/MHDD.csv
+hdfs dfs -put /tmp/LE.csv /data/LE.csv
+hdfs dfs -put /tmp/WH.csv /data/WH.csv
+
+# Exit the Docker container terminal
+exit
+
+# Navigate to the 'ip' directory
+cd ip
+
+# Change file permissions
+sudo chmod a+w /home/ronaldolin_uq/ip/nbs
+
+
+
+
+

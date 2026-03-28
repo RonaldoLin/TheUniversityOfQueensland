@@ -1,0 +1,8 @@
+# Run with superuser privileges
+# Build a Docker image named 'a1' with tag 'lin'
+# Use the current directory as the build context
+sudo docker build -t a1:lin .
+# Run with superuser privileges, launch a new container from the 'a1:lin' image
+# Run in daemon mode and name it 'cca1_nginx_php'
+# Map the host's port 80 to the container's port 80
+# Mount the host's '/home/ronaldolin_uq/cca1/src' to the container's '/var/www/html'sudo docker run -d -p 80:80 --name cca1_nginx_php -v /home/ronaldolin_uq/cca1/src:/var/www/html a1:lin
